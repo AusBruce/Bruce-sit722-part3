@@ -1,1 +1,81 @@
-# Your Solution
+# Book Catalog Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: book-catalog
+  template:
+    metadata:
+      labels:
+        app: book-catalog
+    spec:
+      containers:
+      - name: book-catalog
+        image: brucedemo.azurecr.io/bookcatalog:latest  # Updated to 'latest' as per the Docker Compose file.
+        imagePullPolicy: Always
+        ports:  # 'ports' should be inside the container spec
+        - containerPort: 8000  # Map to container port
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://brucedemo_u7fg_user:wiBWxGRJjtEUj2GQn58g0UAy6w2EGJwj@dpg-crfqm1t6l47c73e3vfo0-a.singapore-postgres.render.com/brucedemo_u7fg"
+      imagePullSecrets:
+      - name: acr-secret  # imagePullSecrets should be at the same level as 'containers'
+---
+# Book Catalog Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: book-catalog
+spec:
+  selector:
+    app: book-catalog
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000  # Exposing port 8000 from the container
+---
+# Inventory Management Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-management
+  template:
+    metadata:
+      labels:
+        app: inventory-management
+    spec:
+      containers:
+      - name: inventory-management
+        image: brucedemo.azurecr.io/inventorymanagement:latest  # Updated to 'latest' as per the Docker Compose file.
+        imagePullPolicy: Always
+        ports:  # 'ports' should be inside the container spec
+        - containerPort: 8000  # Map to container port
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://brucedemo_u7fg_user:wiBWxGRJjtEUj2GQn58g0UAy6w2EGJwj@dpg-crfqm1t6l47c73e3vfo0-a.singapore-postgres.render.com/brucedemo_u7fg"
+      imagePullSecrets:
+      - name: acr-secret  # imagePullSecrets should be at the same level as 'containers'
+---
+# Inventory Management Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-management
+spec:
+  selector:
+    app: inventory-management
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000  # Exposing port 8000 from the container
